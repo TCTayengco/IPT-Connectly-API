@@ -4,6 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 from django.http import JsonResponse
 from .models import User
+from .models import Post
 
 
 # Create your views here.
@@ -51,5 +52,27 @@ def delete_user(request, id):
             user.delete()
             #User.objects.delete(id=id)
             return JsonResponse({'message': 'User deleted successfully'}, status=200)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+        
+# Get a list of all posts
+def get_posts(request):
+    try:
+        posts = list(Post.objects.values('id', 'content', 'author', 'created_at'))
+        return JsonResponse(posts, safe=False)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
+
+#Create a post
+@csrf_exempt
+def create_post(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            author = User.objects.get(id=data['author'])
+            post = Post.objects.create(content=data['content'], author=author)
+            return JsonResponse({'id': post.id, 'message': 'Post created successfully'}, status=201)
+        except User.DoesNotExist:
+            return JsonResponse({'error': 'Author not found'}, status=404)
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
