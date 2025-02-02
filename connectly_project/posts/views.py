@@ -14,7 +14,7 @@ from .serializers import UserSerializer, PostSerializer, CommentSerializer
 
 # Create your views here.
 
-# Get list of users
+# Get list of users (I think also now has POST function)
 class UserListCreate(APIView):
     def get(self, request):
         users = User.objects.all()
@@ -67,7 +67,7 @@ def delete_user(request, id):
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
         
-# Get a list of all posts
+# Get a list of all posts (I think also now has POST function)
 class PostListCreate(APIView):
     def get(self, request):
         posts = Post.objects.all()
