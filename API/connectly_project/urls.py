@@ -1,24 +1,25 @@
-"""
-URL configuration for connectly_project project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.1/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
-from django.contrib import admin
-from django.urls import path, include
+from django.urls import path
+from . import views
+from .views import UserListCreate, PostListCreate, CommentListCreate, RegisterUser, LoginUser, UserListCreate, PostLike, PostComment, PostCommentsList, PostDetail
+from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api-auth/', include('rest_framework.urls')),
-    path('posts/', include('posts.urls')),
-]
+    path('users/', views.get_users, name='get_users'),
+    path('users/create/', views.create_user, name='create_user'),
+    path('users/update/<int:id>/', views.update_user, name='update_user'),
+    path('users/delete/<int:id>/', views.delete_user, name='delete_user'),
+    path('user/', UserListCreate.as_view(), name='user-list-create'),
+    path('posts/', PostListCreate.as_view(), name='post-list-create'),
+    path('comments/', CommentListCreate.as_view(), name='comment-list-create'),
+    path('posts/<int:pk>/', PostListCreate.as_view(), name='post-update-delete'),
+    path('comments/<int:pk>/', CommentListCreate.as_view(), name='comment-update-delete'),
+    path('register/', RegisterUser.as_view(), name='register'),
+    path('login/', LoginUser.as_view(), name='login'),
+    path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('posts/<int:pk>/', views.PostDetail.as_view(), name='post-detail'),
+    path('posts/<int:pk>/like/', views.PostLike.as_view(), name='post-like'),
+    path('posts/<int:pk>/comment/', views.PostComment.as_view(), name='post-comment'),
+    path('posts/<int:pk>/comments/', views.PostCommentsList.as_view(), name='post-comments'),
+
+  ]
+
