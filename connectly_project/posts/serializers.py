@@ -20,6 +20,11 @@ class PostSerializer(serializers.ModelSerializer):
         model = Post
         fields = ['id', 'content', 'author', 'created_at', 'comments']
 
+    def validate_author(self, value):
+        """Ensure the author exists in the database."""
+        if not User.objects.filter(id=value.id).exists():
+            raise serializers.ValidationError("User does not exist.")
+        return value
 
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
