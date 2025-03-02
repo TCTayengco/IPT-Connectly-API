@@ -1,10 +1,10 @@
 from rest_framework import serializers
-from .models import User, Post, Comment, Like
+from posts.models import User, Post, Comment, Like
 import bcrypt
 
 
 from rest_framework import serializers
-from .models import User
+from posts.models import User
 from django.contrib.auth.hashers import make_password
 
 from rest_framework.pagination import PageNumberPagination

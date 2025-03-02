@@ -1,6 +1,6 @@
-from django.urls import path
+from django.urls import path, include
 from . import views
-from .views import UserListCreate, PostListCreate, CommentListCreate, RegisterUser, LoginUser, UserListCreate, PostLike, PostComment, PostCommentsList, PostDetail
+from .views import UserListCreate, PostListCreate, CommentListCreate, RegisterUser, LoginUser, UserListCreate, PostLike, PostComment, PostCommentsList, PostDetail, GoogleLoginView
 from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
@@ -11,6 +11,8 @@ urlpatterns = [
     path('user/', UserListCreate.as_view(), name='user-list-create'),
     path('posts/', PostListCreate.as_view(), name='post-list-create'),
     path('comments/', CommentListCreate.as_view(), name='comment-list-create'),
+    path('posts/<int:pk>/', PostListCreate.as_view(), name='post-update-delete'),
+    path('comments/<int:pk>/', CommentListCreate.as_view(), name='comment-update-delete'),
     path('register/', RegisterUser.as_view(), name='register'),
     path('login/', LoginUser.as_view(), name='login'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
@@ -19,5 +21,12 @@ urlpatterns = [
     path('posts/<int:pk>/comment/', views.PostComment.as_view(), name='post-comment'),
     path('posts/<int:pk>/comments/', views.PostCommentsList.as_view(), name='post-comments'),
 
+    # Testing Google OAuth endpoints
+    # Google OAuth URLs
+    path('auth/google/login/', GoogleLoginView.as_view(), name='google-login'),
+    
+    # Include allauth URLs
+    path('accounts/', include('allauth.urls')),
+    path('api-auth/', include('dj_rest_auth.urls')),
   ]
 

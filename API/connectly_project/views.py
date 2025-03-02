@@ -12,9 +12,9 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
 
-from .models import User, Post, Comment, PasswordSingleton, PasswordClass, PasswordFactory, Like
+from posts.models import User, Post, Comment, PasswordSingleton, PasswordClass, PasswordFactory, Like
 from .serializers import UserSerializer, PostSerializer, CommentSerializer
-from .permission import IsAdmin, IsSelfOrAdmin
+from posts.permission import IsAdmin, IsSelfOrAdmin
 from django.contrib.auth.hashers import make_password, check_password 
 
 from rest_framework_simplejwt.tokens import RefreshToken

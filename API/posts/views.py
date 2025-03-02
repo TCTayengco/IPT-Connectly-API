@@ -24,6 +24,11 @@ from django.contrib.auth import get_user_model
 from rest_framework.decorators import api_view, permission_classes
 from .serializers import CommentPagination, PostDetailSerializer, LikeSerializer
 
+# Testing Google OAuth
+from django.conf import settings
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
+from allauth.socialaccount.models import SocialAccount
 
 # ========================================================
 # Function-Based Views for User Management
@@ -154,6 +159,25 @@ class PostListCreate(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def put(self, request, pk):
+        post = get_object_or_404(Post, pk=pk)
+        if post.author != request.user:
+            return Response({"error": "You can only update your own posts"}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = PostSerializer(post, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        post = get_object_or_404(Post, pk=pk)
+        if post.author != request.user:
+            return Response({"error": "You can only delete your own posts"}, status=status.HTTP_403_FORBIDDEN)
+
+        post.delete()
+        return Response({"message": "Post deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+
 class CommentListCreate(APIView):
     def get(self, request):
         comments = Comment.objects.all()
@@ -167,6 +191,24 @@ class CommentListCreate(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def put(self, request, pk):
+        comment = get_object_or_404(Comment, pk=pk)
+        if comment.author != request.user:
+            return Response({"error": "You can only update your own comments"}, status=status.HTTP_403_FORBIDDEN)
+
+        serializer = CommentSerializer(comment, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk):
+        comment = get_object_or_404(Comment, pk=pk)
+        if comment.author != request.user:
+            return Response({"error": "You can only delete your own comments"}, status=status.HTTP_403_FORBIDDEN)
+
+        comment.delete()
+        return Response({"message": "Comment deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
 class PostDetail(APIView):
     permission_classes = [IsAuthenticated]
@@ -218,4 +260,80 @@ class PostCommentsList(APIView):
         serializer = CommentSerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
     
+# Testing Google OAuth
 
+User = get_user_model()
+
+class GoogleLoginView(APIView):
+
+    permission_classes = []
+
+    def post(self, request):
+        # Get the Google token from the request
+        token = request.data.get('token')
+        
+        if not token:
+            return Response(
+                {'error': 'Google token is required'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            # Verify the Google token
+            idinfo = id_token.verify_oauth2_token(
+                token, 
+                google_requests.Request(), 
+                settings.SOCIALACCOUNT_PROVIDERS['google']['APP']['client_id']
+            )
+            
+            # Extract user information from the token
+            email = idinfo.get('email')
+            if not email:
+                return Response(
+                    {'error': 'Email not found in token'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Check if user already exists
+            try:
+                user = User.objects.get(email=email)
+            except User.DoesNotExist:
+                username = email.split('@')[0]
+                if User.objects.filter(username=username).exists():
+                    username = f"{username}_{idinfo.get('sub')[-6:]}"
+                
+                user = User.objects.create(
+                    username=username,
+                    email=email,
+                    # Set a random password since it won't be used
+                    password=get_user_model().objects.make_random_password(),
+                    role='user'  # Default role
+                )
+                
+                # Link the new user to the Google account
+                SocialAccount.objects.create(
+                    user=user,
+                    provider='google',
+                    uid=idinfo.get('sub'),
+                    extra_data=idinfo
+                )
+            
+            # Generate JWT tokens
+            refresh = RefreshToken.for_user(user)
+            
+            return Response({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+                'role': user.role,
+                'user': {
+                    'id': user.id,
+                    'username': user.username,
+                    'email': user.email,
+                }
+            })
+            
+        except ValueError as e:
+            return Response(
+                {'error': f'Invalid token: {str(e)}'}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
