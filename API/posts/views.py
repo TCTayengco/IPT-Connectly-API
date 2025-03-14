@@ -260,7 +260,7 @@ class PostCommentsList(APIView):
         serializer = CommentSerializer(result_page, many=True)
         return paginator.get_paginated_response(serializer.data)
     
-# Testing Google OAuth
+# Testing Google OAuth using django-allauth library
 
 User = get_user_model()
 
