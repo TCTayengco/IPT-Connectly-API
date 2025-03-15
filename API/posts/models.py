@@ -58,39 +58,8 @@ class Like(models.Model):
     def __str__(self):
         return f"{self.user.username} likes {self.post.id}"
 
-class Singleton(type):
-    # dictionary: Stores instances of the classes.
-    _instances = {}
-    # method: When an instance is created, it checks if the class has already an instance. If not, it creates and stores a new instance. If yes, it returns the existing instance.    
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
-
-# uses Singleton as its metaclass, meaning it will only ever have one instance.
-class PasswordSingleton(metaclass=Singleton):
-    # Initializes the instance with a password attribute.
-    def __init__(self, password):
-        self.password = password
-
 # __init__ method that takes a password argument and stores it as an instance attribute.
 class PasswordClass:
     def __init__(self, password):
             self.password = password
 
-# This is the Factory class that is responsible for creating instances of classes.
-# _creators dictionary: Stores the creators (constructors) of the registered classes.
-# register_class method: Registers a class with the factory by associating it with a key.
-# create_instance method: Creates an instance of the registered class using the provided key and arguments.
-class PasswordFactory:
-    def __init__(self):
-        self._creators = {}
-
-    def register_class(self, key, creator):
-        self._creators[key] = creator
-
-    def create_instance(self, key, *args, **kwargs):
-        creator = self._creators.get(key)
-        if not creator:
-            raise ValueError(f"Class not registered for key: {key}")
-        return creator(*args, **kwargs)

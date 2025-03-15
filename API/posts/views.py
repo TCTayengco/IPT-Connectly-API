@@ -107,6 +107,8 @@ class RegisterUser(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+from .utils import PasswordFactory
+
 class LoginUser(APIView):
     def post(self, request):
         username = request.data.get('username')
@@ -118,7 +120,7 @@ class LoginUser(APIView):
         except User.DoesNotExist:
             return Response({'error': 'Invalid Credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
-        if not user.check_password(password):
+        if not PasswordFactory.verify_password(password, user.password, method="bcrypt"):
             return Response({'error': 'Invalid Credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
         refresh = RefreshToken.for_user(user)
@@ -127,6 +129,7 @@ class LoginUser(APIView):
             'access': str(refresh.access_token),
             'role': user.role
         })
+
     
 class LogoutUser(APIView):
     permission_classes = [IsAuthenticated]

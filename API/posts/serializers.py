@@ -8,6 +8,8 @@ from django.contrib.auth.hashers import make_password
 
 from rest_framework.pagination import PageNumberPagination
 
+from .utils import PasswordFactory
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -15,12 +17,12 @@ class UserSerializer(serializers.ModelSerializer):
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
-        validated_data['password'] = make_password(validated_data['password'])  
+        validated_data['password'] = PasswordFactory.hash_password(validated_data['password'], method="bcrypt")
         return User.objects.create(**validated_data)
 
     def update(self, instance, validated_data):
         if 'password' in validated_data:
-            instance.password = make_password(validated_data['password'])
+            instance.password = PasswordFactory.hash_password(validated_data['password'], method="bcrypt")
         return super().update(instance, validated_data)
 
 class LikeSerializer(serializers.ModelSerializer):
