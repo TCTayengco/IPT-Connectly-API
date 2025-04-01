@@ -14,6 +14,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication
 
+from posts.permission import CanViewPost, IsAdmin, IsSelfOrAdmin, IsPostOwnerOrAdmin, IsCommentOwnerOrAdmin
+
 from .models import User, Post, Comment, Like
 from .serializers import UserSerializer, PostSerializer, CommentSerializer
 
@@ -31,6 +33,9 @@ from google.auth.transport import requests as google_requests
 from allauth.socialaccount.models import SocialAccount
 
 from .utils import PasswordFactory
+from posts import models
+
+from django.db import models  # For Q objects
 
 # ========================================================
 # Function-Based Views for User Management
@@ -39,7 +44,7 @@ from .utils import PasswordFactory
 def get_users(request):
     try:
         users = list(
-            User.objects.values('id', 'username', 'email', 'date_joined','password')
+            User.objects.values('id', 'username', 'email', 'date_joined', 'role', 'password')
          )
         return JsonResponse(users, safe=False)
     except Exception as e:
@@ -204,31 +209,50 @@ class UserDelete(APIView):
         return Response({"message": "User deleted successfully"}, status=status.HTTP_204_NO_CONTENT)    
     
 class PostListCreate(APIView):
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
     def get(self, request):
-        posts = Post.objects.all()
+        # If user is authenticated, show public posts + their own private posts
+        if request.user.is_authenticated:
+            if request.user.role == 'admin':
+                # Admins can see all posts
+                posts = Post.objects.all()
+            else:
+                # Regular users see public posts and their own private posts
+                posts = Post.objects.filter(
+                    models.Q(privacy='public') | 
+                    models.Q(privacy='private', author=request.user)
+                )
+        else:
+            # Unauthenticated users only see public posts
+            posts = Post.objects.filter(privacy='public')
+                    
         serializer = PostSerializer(posts, many=True)
         return Response(serializer.data)
-
 
     def post(self, request):
         serializer = PostSerializer(data=request.data)
         if serializer.is_valid():
-            if self.request.user.is_authenticated:  # Assign author only if user is authenticated
+            if self.request.user.is_authenticated:
                 serializer.save(author=self.request.user)
             else:
-                serializer.save()  # Allow unauthenticated posts but requires manual author input
-        
+                return Response({"error": "Authentication required to create posts"}, 
+                               status=status.HTTP_401_UNAUTHORIZED)
+            
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def put(self, request, pk):
         if not request.user.is_authenticated:
-            return Response({"error": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"error": "Authentication required"}, 
+                           status=status.HTTP_401_UNAUTHORIZED)
 
         post = get_object_or_404(Post, pk=pk)
-        if post.author != request.user:
-            return Response({"error": "You can only update your own posts"}, status=status.HTTP_403_FORBIDDEN)
+        
+        # Check if user has permission to modify this post
+        if post.author != request.user and request.user.role != 'admin':
+            return Response({"error": "You can only update your own posts"}, 
+                           status=status.HTTP_403_FORBIDDEN)
 
         serializer = PostSerializer(post, data=request.data, partial=True)
         if serializer.is_valid():
@@ -238,14 +262,19 @@ class PostListCreate(APIView):
 
     def delete(self, request, pk):
         if not request.user.is_authenticated:
-            return Response({"error": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"error": "Authentication required"}, 
+                           status=status.HTTP_401_UNAUTHORIZED)
 
         post = get_object_or_404(Post, pk=pk)
-        if post.author != request.user and not getattr(request.user, "role", None) == "admin":
-            return Response({"error": "You can only delete your own posts"}, status=status.HTTP_403_FORBIDDEN)
+        
+        # Only the post owner or admin can delete a post
+        if post.author != request.user and request.user.role != 'admin':
+            return Response({"error": "You can only delete your own posts"}, 
+                           status=status.HTTP_403_FORBIDDEN)
 
         post.delete()
-        return Response({"message": "Post deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+        return Response({"message": "Post deleted successfully"}, 
+                       status=status.HTTP_204_NO_CONTENT)
 
 class CommentListCreate(APIView):
     def get(self, request):
@@ -253,16 +282,17 @@ class CommentListCreate(APIView):
         serializer = CommentSerializer(comments, many=True)
         return Response(serializer.data)
 
-
     def post(self, request):
         serializer = CommentSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
     def put(self, request, pk):
         comment = get_object_or_404(Comment, pk=pk)
-        if comment.author != request.user:
+    
+        if comment.author != request.user and not getattr(request.user, "role", None) == "admin":
             return Response({"error": "You can only update your own comments"}, status=status.HTTP_403_FORBIDDEN)
 
         serializer = CommentSerializer(comment, data=request.data, partial=True)
@@ -280,18 +310,25 @@ class CommentListCreate(APIView):
         return Response({"message": "Comment deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
 class PostDetail(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, CanViewPost]
 
     def get(self, request, pk):
         post = get_object_or_404(Post, pk=pk)
+            
+        # Check permissions
+        self.check_object_permissions(request, post)
+        
         serializer = PostDetailSerializer(post)
         return Response(serializer.data)
 
 class PostLike(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CanViewPost]
 
     def post(self, request, pk):
         post = get_object_or_404(Post, pk=pk)
+        
+        # Check if user can view/like the post
+        self.check_object_permissions(request, post)
 
         if request.user in post.likes.all():
             post.likes.remove(request.user)  # Remove like
@@ -313,9 +350,14 @@ class PostLike(APIView):
         return Response({'status': response_status}, status=status_code)
 
 class PostComment(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, CanViewPost]
+    
     def post(self, request, pk):
         post = get_object_or_404(Post, pk=pk)
+        
+        # Check if user can view/comment on the post
+        self.check_object_permissions(request, post)
+        
         serializer = CommentSerializer(data={
             **request.data,
             'post': post.id,
@@ -354,7 +396,7 @@ class FeedView(generics.ListAPIView):
         liked_only = self.request.query_params.get("liked", None)
         sort_order = self.request.query_params.get("sort", "desc")  # Default: Newest first
 
-        # Modify cache key to include sorting preference
+        # Modify cache key to include sorting preference and privacy
         cache_key = f"user_{user.id}_feed_{sort_order}"
         if liked_only:
             cache_key += "_liked"
@@ -367,10 +409,20 @@ class FeedView(generics.ListAPIView):
         # Sort direction
         order_by_field = "-created_at" if sort_order == "desc" else "created_at"
 
-        # Query posts
-        queryset = Post.objects.select_related("author").prefetch_related(
-            "likes", "comments"
-        ).order_by(order_by_field)
+        # Query posts with privacy filtering
+        if user.role == 'admin':
+            # Admins can see all posts
+            queryset = Post.objects.select_related("author").prefetch_related(
+                "likes", "comments"
+            ).order_by(order_by_field)
+        else:
+            # Regular users see public posts and their own private posts
+            queryset = Post.objects.select_related("author").prefetch_related(
+                "likes", "comments"
+            ).filter(
+                models.Q(privacy='public') | 
+                models.Q(privacy='private', author=user)
+            ).order_by(order_by_field)
 
         # Apply filtering for liked posts
         if liked_only:

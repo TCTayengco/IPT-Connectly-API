@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -38,7 +39,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'posts',
     'django_extensions',
     'sslserver',
     'rest_framework_simplejwt',
@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'allauth.socialaccount.providers.google',
     'dj_rest_auth',
     'dj_rest_auth.registration',
+    'posts',
 ]
 
 SITE_ID = 1
@@ -184,6 +185,15 @@ AUTH_USER_MODEL = 'posts.User'
 # Django AllAuth Settings
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 ACCOUNT_LOGIN_METHODS = {'email', 'username'}
-ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'username*', 'password1*', 'password2*']
 ACCOUNT_UNIQUE_EMAIL = True
-ACCOUNT_USERNAME_REQUIRED = True
+
+# Token Settings
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(hours=3),  # Adjust as needed
+    "REFRESH_TOKEN_LIFETIME": timedelta(hours=3),  # Adjust as needed
+    "ROTATE_REFRESH_TOKENS": True,  # Enables refresh token rotation
+    "BLACKLIST_AFTER_ROTATION": True,  # Ensures old refresh tokens cannot be reused
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,  # Uses Django's secret key for signing
+}

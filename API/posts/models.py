@@ -31,6 +31,12 @@ class Post(models.Model):
     author = models.ForeignKey(User, related_name='posts', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     likes = models.ManyToManyField(User, related_name="liked_posts", blank=True)
+    # Privacy field
+    PRIVACY_CHOICES = (
+        ('public', 'Public'),
+        ('private', 'Private'),
+    )
+    privacy = models.CharField(max_length=10, choices=PRIVACY_CHOICES, default='public')
 
 
     def __str__(self):

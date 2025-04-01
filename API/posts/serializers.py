@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from .models import User, Post, Comment, Like
 
-
 from rest_framework import serializers
 from .models import User
 from django.contrib.auth.hashers import make_password
@@ -39,7 +38,7 @@ class PostSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ['id', 'content', 'author', 'created_at', 'comments', 'likes_count','liked_users', 'comments_count']
+        fields = ['id', 'content', 'author', 'created_at', 'comments', 'likes_count','liked_users', 'comments_count', 'privacy']
         extra_kwargs = {'author': {'read_only': True}}
 
 
@@ -75,7 +74,7 @@ class PostDetailSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Post
-        fields = ['id', 'content', 'author', 'created_at', 'liked_users','likes_count', 'comments_count', 'comments']
+        fields = ['id', 'content', 'author', 'created_at', 'liked_users','likes_count', 'comments_count', 'comments', 'privacy']
 
     def get_likes_count(self, obj):
         return obj.likes.count()
