@@ -12,3 +12,6 @@
 
 ### **Task 9: Performance Optimization**  
 #### **Edited Files:**  
+- `views.py`  
+- `utils.py`  
+- `monitor.py`  
