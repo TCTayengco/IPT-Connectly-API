@@ -1,0 +1,47 @@
+INFO 2025-04-03 17:06:47,423 views Cache MISS: user_16_feed_response_desc_page_1_size_10
+DEBUG 2025-04-03 17:06:47,424 views Checking cache for key: user_16_feed_desc
+INFO 2025-04-03 17:06:47,424 views Cache MISS: user_16_feed_desc
+DEBUG 2025-04-03 17:06:47,424 views Admin user 16 requesting feed, showing all posts
+INFO 2025-04-03 17:06:47,424 views Setting cache for key: user_16_feed_desc (timeout: 300s)
+ERROR 2025-04-03 17:06:47,428 monitor Error getting cache stats: 'collections.OrderedDict' object has no attribute 'get_stats'
+INFO 2025-04-03 17:06:47,428 monitor Performance: get_queryset - User: anonymous - Time: 0.0043s
+INFO 2025-04-03 17:06:47,432 views Setting cache for key: user_16_feed_response_desc_page_1_size_10 (timeout: 300s)
+ERROR 2025-04-03 17:06:47,438 monitor Error getting cache stats: 'collections.OrderedDict' object has no attribute 'get_stats'
+INFO 2025-04-03 17:06:47,438 monitor Performance: list - User: 16 - Time: 0.0147s
+INFO 2025-04-03 17:11:17,424 views Cache MISS: user_16_feed_response_desc_page_1_size_10
+DEBUG 2025-04-03 17:11:17,425 views Checking cache for key: user_16_feed_desc
+INFO 2025-04-03 17:11:17,425 views Cache MISS: user_16_feed_desc
+DEBUG 2025-04-03 17:11:17,425 views Admin user 16 requesting feed, showing all posts
+INFO 2025-04-03 17:11:17,425 views Setting cache for key: user_16_feed_desc (timeout: 300s)
+INFO 2025-04-03 17:11:17,429 monitor Cache backend: ConnectionProxy
+INFO 2025-04-03 17:11:17,430 monitor Cache stats not available for this cache backend
+INFO 2025-04-03 17:11:17,430 monitor Default timeout: 1743671777.4301481
+INFO 2025-04-03 17:11:17,430 monitor Performance: get_queryset - User: anonymous - Time: 0.0052s
+INFO 2025-04-03 17:11:17,435 views Setting cache for key: user_16_feed_response_desc_page_1_size_10 (timeout: 300s)
+INFO 2025-04-03 17:11:17,435 monitor Cache backend: ConnectionProxy
+INFO 2025-04-03 17:11:17,436 monitor Cache stats not available for this cache backend
+INFO 2025-04-03 17:11:17,436 monitor Default timeout: 1743671777.4362257
+INFO 2025-04-03 17:11:17,436 monitor Performance: list - User: 16 - Time: 0.0117s
+INFO 2025-04-03 17:55:48,643 views Cache MISS: user_16_feed_response_desc_page_1_size_10
+DEBUG 2025-04-03 17:55:48,643 views Checking cache for key: user_16_feed_desc
+INFO 2025-04-03 17:55:48,644 views Cache MISS: user_16_feed_desc
+DEBUG 2025-04-03 17:55:48,644 views Admin user 16 requesting feed, showing all posts
+INFO 2025-04-03 17:55:48,644 views Setting cache for key: user_16_feed_desc (timeout: 300s)
+INFO 2025-04-03 17:55:48,648 monitor Cache backend: ConnectionProxy
+INFO 2025-04-03 17:55:48,648 monitor Cache stats not available for this cache backend
+INFO 2025-04-03 17:55:48,648 monitor Default timeout: 1743674448.6488748
+INFO 2025-04-03 17:55:48,649 monitor Performance: get_queryset - User: anonymous - Time: 0.0052s
+INFO 2025-04-03 17:55:48,655 views Setting cache for key: user_16_feed_response_desc_page_1_size_10 (timeout: 300s)
+INFO 2025-04-03 17:55:48,656 monitor Cache backend: ConnectionProxy
+INFO 2025-04-03 17:55:48,656 monitor Cache stats not available for this cache backend
+INFO 2025-04-03 17:55:48,656 monitor Default timeout: 1743674448.6566985
+INFO 2025-04-03 17:55:48,656 monitor Performance: list - User: 16 - Time: 0.0134s
+INFO 2025-04-03 17:56:28,840 views Cache MISS: user_16_feed_response_desc_page_2_size_10
+DEBUG 2025-04-03 17:56:28,840 views Checking cache for key: user_16_feed_desc
+INFO 2025-04-03 17:56:28,842 views Cache HIT: user_16_feed_desc
+INFO 2025-04-03 17:56:28,842 monitor Performance: get_queryset - User: anonymous - Time: 0.0014s
+INFO 2025-04-03 17:56:28,846 views Setting cache for key: user_16_feed_response_desc_page_2_size_10 (timeout: 300s)
+INFO 2025-04-03 17:56:28,846 monitor Cache backend: ConnectionProxy
+INFO 2025-04-03 17:56:28,846 monitor Cache stats not available for this cache backend
+INFO 2025-04-03 17:56:28,846 monitor Default timeout: 1743674488.8467917
+INFO 2025-04-03 17:56:28,847 monitor Performance: list - User: 16 - Time: 0.0064s
